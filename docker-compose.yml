@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  mkt-backend:
+    build:
+      context: f:/mkt-backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - f:/mkt-backend:/app
+      - /app/__pycache__
+      - /app/venv
+    environment:
+      - FLASK_ENV=development
+    restart: always
+
+  portfolio-frontend:
+    build:
+      context: f:/premium-developer-portfolio
+      dockerfile: Dockerfile.dev # We will create this next
+    ports:
+      - "5173:5173"
+    volumes:
+      - f:/premium-developer-portfolio:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    depends_on:
+      - mkt-backend
+    restart: always

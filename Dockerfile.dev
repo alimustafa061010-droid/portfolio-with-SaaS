@@ -1,0 +1,20 @@
+# Official Node.js runtime for building/running
+FROM node:20-alpine
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the package description files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of the portfolio into the container
+COPY . .
+
+# Expose port 5173 for Vite dev server
+EXPOSE 5173
+
+# Start the dev server and expose it on all interfaces
+CMD ["npm", "run", "dev", "--", "--host"]
