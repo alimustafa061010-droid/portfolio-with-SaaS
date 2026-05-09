@@ -92,20 +92,19 @@ export default function EnrollmentForm({ courseName, onClose }: EnrollmentFormPr
     <div 
       ref={modalRef}
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
-      onClick={(e) => e.target === modalRef.current && handleClose()}
     >
       <div 
         ref={contentRef}
-        className="relative w-full max-w-xl bg-zinc-950 border border-white/10 rounded-[40px] overflow-hidden shadow-2xl"
+        className="relative w-full max-w-xl bg-zinc-950 border border-white/10 rounded-[40px] shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar"
       >
         <button 
           onClick={handleClose}
-          className="absolute top-8 right-8 p-3 rounded-full bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-300 z-20"
+          className="sticky top-8 float-right mr-8 p-3 rounded-full bg-zinc-900 border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-300 z-50"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="p-10 md:p-14">
+        <div className="p-10 md:p-14 pt-0">
           {status === 'success' ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
               <div className="w-20 h-20 bg-accent/20 rounded-full flex items-center justify-center mb-8">
