@@ -313,7 +313,7 @@ export default function HeroSection({ isLoaded }: { isLoaded: boolean }) {
     <section
       id="hero"
       ref={containerRef}
-      className="relative w-full h-screen overflow-hidden bg-transparent pt-32 px-8 flex flex-col justify-between pb-24"
+      className="relative w-full h-screen overflow-hidden bg-transparent pt-24 md:pt-32 px-6 md:px-8 flex flex-col justify-between pb-16 md:pb-24"
     >
       {/* "You" / "Locked" cursor label */}
       <div

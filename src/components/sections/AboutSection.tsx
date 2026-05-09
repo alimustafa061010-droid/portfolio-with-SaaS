@@ -60,7 +60,7 @@ export default function AboutSection() {
   }, { scope: containerRef });
 
   return (
-    <section id="about" className="relative w-full min-h-screen py-32 flex items-center bg-transparent overflow-hidden" ref={containerRef}>
+    <section id="about" className="relative w-full min-h-screen py-24 md:py-32 flex items-center bg-transparent overflow-hidden" ref={containerRef}>
       
       {/* Background Scrolling Text */}
       <div className="absolute top-1/2 left-0 -translate-y-1/2 w-full whitespace-nowrap pointer-events-none opacity-5 flex flex-col items-start gap-4">
@@ -68,7 +68,7 @@ export default function AboutSection() {
           <span className="about-bg-text text-[30vw] font-black uppercase tracking-tighter text-transparent leading-none self-end inline-block" style={{ WebkitTextStroke: '2px white' }}>Identity Design Development</span>
       </div>
 
-      <div className="max-w-screen-2xl mx-auto w-full px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 relative z-10">
+      <div className="max-w-screen-2xl mx-auto w-full px-6 md:px-8 grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-16 relative z-10">
         
         {/* Left: Section Info (Pins via ScrollTrigger parent) */}
         <div className="flex flex-col">

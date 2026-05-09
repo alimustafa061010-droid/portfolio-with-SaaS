@@ -178,7 +178,7 @@ export default function ProjectsBento() {
   }, [terminalLogs]);
 
   return (
-    <section id="projects" className="relative w-full min-h-screen bg-transparent px-8 py-32">
+    <section id="projects" className="relative w-full min-h-screen bg-transparent px-6 md:px-8 py-24 md:py-32">
       <div className="max-w-screen-2xl mx-auto" ref={containerRef}>
         
         <div className="flex flex-col mb-24">
@@ -238,7 +238,7 @@ export default function ProjectsBento() {
                </div>
 
                <div className="relative z-10">
-                  <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white leading-none">
+                  <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-white leading-none">
                     {project.title.split(' ').map((word, i) => (
                         <span key={i} className="block">{word}</span>
                     ))}
@@ -277,7 +277,7 @@ export default function ProjectsBento() {
                   
                   <div className="absolute bottom-12 left-12 right-12">
                      <span className="text-xs font-mono text-accent uppercase tracking-[0.3em] mb-4 block">{activeProject.tag}</span>
-                     <h2 className="text-6xl md:text-8xl font-black text-white uppercase tracking-tighter leading-none italic">{activeProject.title}</h2>
+                     <h2 className="text-4xl md:text-8xl font-black text-white uppercase tracking-tighter leading-none italic">{activeProject.title}</h2>
                   </div>
                </div>
 

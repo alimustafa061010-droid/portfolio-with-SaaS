@@ -53,7 +53,7 @@ export default function SkillsSection() {
   }, { scope: containerRef });
 
   return (
-    <section id="skills" className="relative w-full py-32 bg-transparent overflow-hidden px-8" ref={containerRef}>
+    <section id="skills" className="relative w-full py-24 md:py-32 bg-transparent overflow-hidden px-6 md:px-8" ref={containerRef}>
       
       <div className="max-w-screen-2xl mx-auto mb-24 flex flex-col items-start">
         <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em] mb-6">
@@ -71,7 +71,7 @@ export default function SkillsSection() {
 
       <div className="skill-grid max-w-screen-2xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
         {skills.map((skill, i) => (
-          <div key={i} className="skill-card group relative h-[280px] rounded-2xl overflow-hidden border border-white/5 bg-zinc-950/20 backdrop-blur-xl flex flex-col justify-end p-8 transition-all duration-500 hover:border-accent/30 cursor-default">
+          <div key={i} className="skill-card group relative h-[220px] md:h-[280px] rounded-2xl overflow-hidden border border-white/5 bg-zinc-950/20 backdrop-blur-xl flex flex-col justify-end p-6 md:p-8 transition-all duration-500 hover:border-accent/30 cursor-default">
              <div className="absolute inset-0 z-0 overflow-hidden">
                 <img 
                   src={skill.image} 

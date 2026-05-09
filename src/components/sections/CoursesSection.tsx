@@ -154,7 +154,7 @@ export default function CoursesSection() {
   };
 
   return (
-    <section id="courses" className="relative w-full py-32 bg-transparent overflow-hidden px-8" ref={containerRef}>
+    <section id="courses" className="relative w-full py-24 md:py-32 bg-transparent overflow-hidden px-6 md:px-8" ref={containerRef}>
       <div className="max-w-screen-2xl mx-auto mb-20 flex flex-col items-start px-4">
         <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em] mb-6 block course-header-reveal">
           05 / ACADEMY
@@ -223,7 +223,7 @@ export default function CoursesSection() {
       </div>
 
       {/* Why Choose Us Section Placeholder or Integration */}
-      <div className="max-w-screen-2xl mx-auto mt-32 grid grid-cols-2 md:grid-cols-4 gap-8 px-4 opacity-50">
+      <div className="max-w-screen-2xl mx-auto mt-20 md:mt-32 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 px-4 opacity-50">
         {[
           { label: "Practical Training", value: "Hands-on Experience" },
           { label: "Expert Instructors", value: "Industry Professionals" },
