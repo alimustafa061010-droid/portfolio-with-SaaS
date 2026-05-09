@@ -18,14 +18,17 @@ try:
 except Exception as e:
     print(f"Init error: {e}")
 
+LAST_EMAIL_ERROR = None
+
 def send_enrollment_email(enrollment_data):
+    global LAST_EMAIL_ERROR
     """Sends an email notification via Gmail SMTP."""
     sender_email = os.getenv('GMAIL_USER')
     sender_password = os.getenv('GMAIL_APP_PASSWORD')
     receiver_email = os.getenv('RECEIVER_EMAIL') or os.getenv('GMAIL_USER')
 
     if not sender_email or not sender_password:
-        print("[ERROR] Email credentials not found in environment variables.")
+        LAST_EMAIL_ERROR = "Credentials not found in environment"
         return False
 
     message = MIMEMultipart("alternative")
@@ -71,7 +74,7 @@ def send_enrollment_email(enrollment_data):
             </tr>
         </table>
         <p style="font-size: 11px; color: #64748b; margin-top: 30px; text-align: center;">
-            This is an automated notification from your Advanced Portfolio Enrollment System.
+            This is an automated notification from your Portfolio Enrollment System.
         </p>
     </body>
     </html>
@@ -86,8 +89,10 @@ def send_enrollment_email(enrollment_data):
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(sender_email, sender_password)
             server.sendmail(sender_email, receiver_email, message.as_string())
+        LAST_EMAIL_ERROR = "None (Success)"
         return True
     except Exception as e:
+        LAST_EMAIL_ERROR = str(e)
         print(f"[ERROR] Failed to send enrollment email: {e}")
         return False
 
@@ -110,7 +115,8 @@ def health():
         'email_setup': {
             'has_user': os.getenv('GMAIL_USER') is not None,
             'has_password': os.getenv('GMAIL_APP_PASSWORD') is not None,
-            'receiver': os.getenv('RECEIVER_EMAIL') or os.getenv('GMAIL_USER')
+            'receiver': os.getenv('RECEIVER_EMAIL') or os.getenv('GMAIL_USER'),
+            'last_error': LAST_EMAIL_ERROR
         },
         'timestamp': datetime.now().isoformat()
     })
