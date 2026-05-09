@@ -18,7 +18,14 @@ def get_db_connection():
     postgres_url = os.environ.get('POSTGRES_URL') or os.environ.get('DATABASE_URL')
     
     if postgres_url and HAS_POSTGRES:
-        # Connect to Vercel Postgres
+        # Normalize protocol for psycopg2 compatibility (Supabase/Vercel)
+        if postgres_url.startswith('postgres://'):
+            postgres_url = postgres_url.replace('postgres://', 'postgresql://', 1)
+        
+        # Strip problematic query parameters (like supa=base) that psycopg2 doesn't like
+        if '?' in postgres_url:
+            postgres_url = postgres_url.split('?')[0]
+            
         conn = psycopg2.connect(postgres_url, sslmode='require')
         return conn
     else:
