@@ -245,11 +245,12 @@ export default function HeroSection({ isLoaded }: { isLoaded: boolean }) {
   const triggerGuardianReset = useCallback(() => {
     if (isResetting.current) return;
 
-    // Check if anything is actually displaced
+    // Only trigger if characters are meaningfully displaced (>30px)
+    // Threshold prevents false positives from scroll micro-drags on mobile
     const anyMoved = charRefs.current.some(r => {
       if (!r) return false;
       const { x: ox, y: oy } = r.getOffset();
-      return Math.abs(ox) > 1 || Math.abs(oy) > 1;
+      return Math.abs(ox) > 30 || Math.abs(oy) > 30;
     });
     if (!anyMoved) return;
 
@@ -330,7 +331,7 @@ export default function HeroSection({ isLoaded }: { isLoaded: boolean }) {
     });
   }, [guardianX, guardianY]);
 
-  // Right-click (desktop) OR long-press (mobile) triggers Guardian
+  // Right-click (desktop) triggers Guardian. On mobile, drag ends auto-trigger via handleDragEnd.
   useEffect(() => {
     const handleDown = (e: PointerEvent) => {
       if (e.button === 2) { e.preventDefault(); triggerGuardianReset(); }
@@ -338,22 +339,9 @@ export default function HeroSection({ isLoaded }: { isLoaded: boolean }) {
     const noCtx = (e: Event) => e.preventDefault();
     window.addEventListener('pointerdown', handleDown);
     window.addEventListener('contextmenu', noCtx);
-
-    // Long-press on mobile
-    let longPressTimer: ReturnType<typeof setTimeout>;
-    const onTouchStart = () => { longPressTimer = setTimeout(() => triggerGuardianReset(), 600); };
-    const onTouchEnd = () => clearTimeout(longPressTimer);
-    const onTouchMove = () => clearTimeout(longPressTimer);
-    window.addEventListener('touchstart', onTouchStart, { passive: true });
-    window.addEventListener('touchend', onTouchEnd, { passive: true });
-    window.addEventListener('touchmove', onTouchMove, { passive: true });
-
     return () => {
       window.removeEventListener('pointerdown', handleDown);
       window.removeEventListener('contextmenu', noCtx);
-      window.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchend', onTouchEnd);
-      window.removeEventListener('touchmove', onTouchMove);
     };
   }, [triggerGuardianReset]);
 
