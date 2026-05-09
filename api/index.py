@@ -107,6 +107,11 @@ def health():
     return jsonify({
         'status': 'healthy' if "connected" in db_status else 'degraded',
         'database': db_status,
+        'email_setup': {
+            'has_user': os.getenv('GMAIL_USER') is not None,
+            'has_password': os.getenv('GMAIL_APP_PASSWORD') is not None,
+            'receiver': os.getenv('RECEIVER_EMAIL') or os.getenv('GMAIL_USER')
+        },
         'timestamp': datetime.now().isoformat()
     })
 
