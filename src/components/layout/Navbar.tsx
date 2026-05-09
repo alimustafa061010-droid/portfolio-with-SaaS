@@ -68,6 +68,12 @@ export default function Navbar() {
             Systems
           </button>
           <button 
+            onClick={() => handleScrollTo('courses')}
+            className="text-xs text-white hover:text-accent font-bold uppercase tracking-widest transition-colors"
+          >
+            Academy
+          </button>
+          <button 
             onClick={() => handleScrollTo('about')}
             className="text-xs text-white hover:text-accent font-bold uppercase tracking-widest transition-colors"
           >

@@ -5,6 +5,7 @@ import AboutSection from '../components/sections/AboutSection';
 import ProjectsBento from '../components/sections/ProjectsBento';
 import SkillsSection from '../components/sections/SkillsSection';
 import PortalsSection from '../components/sections/PortalsSection';
+import CoursesSection from '../components/sections/CoursesSection';
 import ContactSection from '../components/sections/ContactSection';
 
 export default function LandingPage({ isLoaded }: { isLoaded: boolean }) {
@@ -23,6 +24,7 @@ export default function LandingPage({ isLoaded }: { isLoaded: boolean }) {
       <ProjectsBento />
       <SkillsSection />
       <PortalsSection />
+      <CoursesSection />
       <ContactSection />
     </>
   );
