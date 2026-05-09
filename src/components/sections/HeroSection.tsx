@@ -418,23 +418,24 @@ export default function HeroSection({ isLoaded }: { isLoaded: boolean }) {
             <path d="M5.5 3.21V20.8C5.5 21.46 6.27 21.82 6.78 21.4L11.5 16.92L15.34 22.18C15.65 22.61 16.27 22.7 16.7 22.39L18.46 21.11C18.89 20.8 18.98 20.17 18.66 19.74L14.73 14.3H20.21C20.87 14.3 21.24 13.53 20.82 13.02L6.82 2.23C6.44 1.94 5.5 2.11 5.5 3.21Z" fill="currentColor" stroke="black" strokeWidth="1.5" strokeLinejoin="round"/>
           </svg>
           
-          {/* "Navaish Khan" label below and to the right of the cursor */}
+        {/* "Navaish Khan" label below and to the right of the cursor */}
           <div className="absolute top-5 left-5 bg-accent px-2 py-0.5 rounded-sm shadow-lg border border-black/10 flex items-center">
             <span className="text-[9px] text-black font-black uppercase tracking-widest whitespace-nowrap">Navaish Khan</span>
           </div>
         </div>
-
-        {message && (
-          <div
-            className="mt-5 ml-4 bg-white/10 backdrop-blur-xl px-4 py-2 rounded-lg border border-white/10 shadow-xl text-center"
-            style={{ maxWidth: 'min(320px, 85vw)' }}
-          >
-            <span className="text-[13px] text-accent font-bold uppercase italic leading-snug font-mono">
-              <TypewriterText text={message} speed={80} />
-            </span>
-          </div>
-        )}
       </motion.div>
+
+      {/* Guardian message — separate fixed centered overlay, never overflows */}
+      {message && (
+        <div
+          className="pointer-events-none fixed z-[200] bottom-10 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-xl px-5 py-3 rounded-xl border border-white/10 shadow-2xl text-center animate-in fade-in slide-in-from-bottom-4 duration-300"
+          style={{ maxWidth: 'min(400px, 90vw)' }}
+        >
+          <span className="text-[13px] md:text-[15px] text-accent font-bold uppercase italic leading-snug font-mono">
+            <TypewriterText text={message} speed={80} />
+          </span>
+        </div>
+      )}
 
       {/* Section label */}
       <motion.div
