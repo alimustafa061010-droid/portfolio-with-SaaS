@@ -22,7 +22,7 @@ def send_enrollment_email(enrollment_data):
     """Sends an email notification via Gmail SMTP."""
     sender_email = os.getenv('GMAIL_USER')
     sender_password = os.getenv('GMAIL_APP_PASSWORD')
-    receiver_email = os.getenv('GMAIL_USER') # Send to the same email as sender
+    receiver_email = os.getenv('RECEIVER_EMAIL') or os.getenv('GMAIL_USER')
 
     if not sender_email or not sender_password:
         print("[ERROR] Email credentials not found in environment variables.")
