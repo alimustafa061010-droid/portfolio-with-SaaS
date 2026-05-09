@@ -18,14 +18,6 @@ try:
 except Exception as e:
     print(f"Init error: {e}")
 
-@app.route('/api/init-db', methods=['GET'])
-def trigger_init():
-    try:
-        initialize_db()
-        return jsonify({'success': True, 'message': 'Database initialization triggered'})
-    except Exception as e:
-        return jsonify({'success': False, 'message': f'Init failed: {str(e)}'}), 500
-
 @app.route('/api/health', methods=['GET'])
 def health():
     db_status = "unknown"
@@ -42,12 +34,6 @@ def health():
     return jsonify({
         'status': 'healthy' if "connected" in db_status else 'degraded',
         'database': db_status,
-        'diagnostics': {
-            'has_postgres_url': 'POSTGRES_URL' in os.environ,
-            'has_database_url': 'DATABASE_URL' in os.environ,
-            'has_psycopg2': HAS_POSTGRES,
-            'env_keys': list(os.environ.keys())[:10] # Just see a few
-        },
         'timestamp': datetime.now().isoformat()
     })
 
