@@ -3,15 +3,15 @@ import threading
 import time
 from contextlib import contextmanager
 from typing import Optional, Dict, Any
+import sqlite3
 
-# Conditional imports for Postgres/SQLite
+# Conditional import for Postgres
 try:
     import psycopg2
     from psycopg2.extras import RealDictCursor
     HAS_POSTGRES = True
 except ImportError:
     HAS_POSTGRES = False
-    import sqlite3
 
 def get_db_connection():
     """Get a database connection (Postgres for Vercel, SQLite for local)"""
