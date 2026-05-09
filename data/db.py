@@ -53,17 +53,20 @@ def get_db_connection_context():
 
 def initialize_db():
     """Initialize database tables for Postgres/SQLite"""
-    with get_db_connection_context() as conn:
+    conn = get_db_connection()
+    try:
         cursor = conn.cursor()
         
         # Use SERIAL for Postgres, AUTOINCREMENT for SQLite
-        id_type = "SERIAL PRIMARY KEY" if os.environ.get('POSTGRES_URL') else "INTEGER PRIMARY KEY AUTOINCREMENT"
+        is_postgres = os.environ.get('POSTGRES_URL') is not None
+        id_type = "SERIAL PRIMARY KEY" if is_postgres else "INTEGER PRIMARY KEY AUTOINCREMENT"
         text_type = "TEXT"
         timestamp_type = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
 
-        # Enrollment table
-        cursor.execute(f'''
-            CREATE TABLE IF NOT EXISTS enrollments (
+        # List of table creation statements
+        tables = [
+            # Enrollment table
+            f'''CREATE TABLE IF NOT EXISTS enrollments (
                 id {id_type},
                 name {text_type} NOT NULL,
                 email {text_type} NOT NULL,
@@ -71,23 +74,17 @@ def initialize_db():
                 course {text_type} NOT NULL,
                 message {text_type},
                 created_at {timestamp_type}
-            )
-        ''')
-        
-        # Users table
-        cursor.execute(f'''
-            CREATE TABLE IF NOT EXISTS users (
+            )''',
+            # Users table
+            f'''CREATE TABLE IF NOT EXISTS users (
                 id {id_type},
                 email {text_type} UNIQUE,
                 password {text_type},
                 role {text_type} DEFAULT 'user',
                 created_at {timestamp_type}
-            )
-        ''')
-
-        conn.commit()
-        cursor.execute(f'''
-            CREATE TABLE IF NOT EXISTS customers (
+            )''',
+            # Customers table
+            f'''CREATE TABLE IF NOT EXISTS customers (
                 id {id_type},
                 serial_number {text_type} UNIQUE,
                 name {text_type},
@@ -99,97 +96,37 @@ def initialize_db():
                 customer_extra_fields {text_type} DEFAULT '{{}}',
                 created_at {timestamp_type},
                 updated_at {timestamp_type}
-            )
-        ''')
-        
-        # Add customer_extra_fields column if it doesn't exist (for existing databases)
-        try:
-            cursor.execute(f"ALTER TABLE customers ADD COLUMN customer_extra_fields {text_type} DEFAULT '{{}}'")
-        except Exception:
-            pass
-        
-        # Create index on serial_number for faster lookups
-        cursor.execute('''
-            CREATE INDEX IF NOT EXISTS idx_customers_serial 
-            ON customers(serial_number)
-        ''')
-        
-        # Create index on name for faster searches
-        cursor.execute('''
-            CREATE INDEX IF NOT EXISTS idx_customers_name 
-            ON customers(name)
-        ''')
-        
-        # Create materials table
-        cursor.execute(f'''
-            CREATE TABLE IF NOT EXISTS materials (
+            )''',
+            # Materials table
+            f'''CREATE TABLE IF NOT EXISTS materials (
                 id {id_type},
                 name {text_type} UNIQUE,
-                properties {text_type}, -- JSON string
+                properties {text_type},
                 created_at {timestamp_type},
                 active INTEGER DEFAULT 1,
                 category {text_type} DEFAULT 'inventory'
-            )
-        ''')
-        
-        # Add active column if it doesn't exist (for existing databases)
-        try:
-            cursor.execute("ALTER TABLE materials ADD COLUMN active INTEGER DEFAULT 1")
-        except Exception:
-            pass
-        
-        # Add category column if it doesn't exist (for existing databases)
-        try:
-            cursor.execute(f"ALTER TABLE materials ADD COLUMN category {text_type} DEFAULT 'inventory'")
-        except Exception:
-            pass
-        
-        # Create index on material name
-        cursor.execute('''
-            CREATE INDEX IF NOT EXISTS idx_materials_name 
-            ON materials(name)
-        ''')
-        
-        # Create inventory table with optimized structure
-        cursor.execute(f'''
-            CREATE TABLE IF NOT EXISTS inventory (
+            )''',
+            # Inventory table
+            f'''CREATE TABLE IF NOT EXISTS inventory (
                 id {id_type},
                 material_id INTEGER,
                 quantity INTEGER DEFAULT 0,
                 price REAL DEFAULT 0.0,
                 image_path {text_type},
-                properties {text_type}, -- JSON string
+                properties {text_type},
                 created_at {timestamp_type},
-                updated_at {timestamp_type},
-                FOREIGN KEY(material_id) REFERENCES materials(id) ON DELETE CASCADE
-            )
-        ''')
-        
-        # Create indexes for inventory
-        cursor.execute('''
-            CREATE INDEX IF NOT EXISTS idx_inventory_material 
-            ON inventory(material_id)
-        ''')
-        
-        cursor.execute('''
-            CREATE INDEX IF NOT EXISTS idx_inventory_quantity 
-            ON inventory(quantity)
-        ''')
-        
-        # Create removed_materials table
-        cursor.execute(f'''
-            CREATE TABLE IF NOT EXISTS removed_materials (
+                updated_at {timestamp_type}
+            )''',
+            # Removed materials
+            f'''CREATE TABLE IF NOT EXISTS removed_materials (
                 id {id_type},
                 name {text_type},
-                properties {text_type}, -- JSON string
+                properties {text_type},
                 removed_at {timestamp_type},
                 removed_by {text_type}
-            )
-        ''')
-        
-        # Create inventory_change_log table with optimized structure
-        cursor.execute(f'''
-            CREATE TABLE IF NOT EXISTS inventory_change_log (
+            )''',
+            # Change log
+            f'''CREATE TABLE IF NOT EXISTS inventory_change_log (
                 id {id_type},
                 item_id INTEGER,
                 action {text_type} NOT NULL,
@@ -197,51 +134,52 @@ def initialize_db():
                 quantity_after INTEGER,
                 timestamp {timestamp_type},
                 "user" {text_type},
-                note {text_type},
-                FOREIGN KEY(item_id) REFERENCES inventory(id) ON DELETE SET NULL
-            )
-        ''')
-        
-        # Create indexes for change log
-        cursor.execute('''
-            CREATE INDEX IF NOT EXISTS idx_log_item 
-            ON inventory_change_log(item_id)
-        ''')
-        
-        cursor.execute('''
-            CREATE INDEX IF NOT EXISTS idx_log_timestamp 
-            ON inventory_change_log(timestamp)
-        ''')
-        
-        cursor.execute('''
-            CREATE INDEX IF NOT EXISTS idx_log_action 
-            ON inventory_change_log(action)
-        ''')
-        
-        # Triggers for updated_at (Only for SQLite, Postgres uses different trigger setup or handled elsewhere)
-        if not os.environ.get('POSTGRES_URL'):
-            cursor.execute('''
-                CREATE TRIGGER IF NOT EXISTS update_customers_timestamp 
-                AFTER UPDATE ON customers
-                BEGIN
-                    UPDATE customers SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
-                END
-            ''')
-            
-            cursor.execute('''
-                CREATE TRIGGER IF NOT EXISTS update_inventory_timestamp 
-                AFTER UPDATE ON inventory
-                BEGIN
-                    UPDATE inventory SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
-                END
-            ''')
+                note {text_type}
+            )'''
+        ]
 
-        # Insert a default admin user if no users exist
-        cursor.execute("SELECT COUNT(*) FROM users")
-        if cursor.fetchone()[0] == 0:
-            cursor.execute("INSERT INTO users (email, password, role) VALUES ('admin@mkt.com', 'admin123', 'admin')")
+        for table_sql in tables:
+            try:
+                cursor.execute(table_sql)
+                conn.commit()
+            except Exception as e:
+                conn.rollback()
+                print(f"Error creating table: {e}")
+                # We continue if it's "already exists" but for Postgres IF NOT EXISTS should handle it
+                # If it's a real error, we might want to know
+        
+        # Add index statements
+        indexes = [
+            "CREATE INDEX IF NOT EXISTS idx_customers_serial ON customers(serial_number)",
+            "CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(name)",
+            "CREATE INDEX IF NOT EXISTS idx_materials_name ON materials(name)",
+            "CREATE INDEX IF NOT EXISTS idx_inventory_material ON inventory(material_id)",
+            "CREATE INDEX IF NOT EXISTS idx_log_item ON inventory_change_log(item_id)"
+        ]
+        
+        for index_sql in indexes:
+            try:
+                cursor.execute(index_sql)
+                conn.commit()
+            except Exception:
+                conn.rollback()
 
-        conn.commit()
+        # Insert default admin if not exists
+        try:
+            cursor.execute("SELECT COUNT(*) FROM users")
+            if cursor.fetchone()[0] == 0:
+                cursor.execute("INSERT INTO users (email, password, role) VALUES ('admin@mkt.com', 'admin123', 'admin')")
+                conn.commit()
+        except Exception:
+            conn.rollback()
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise e
+    finally:
+        if conn:
+            conn.close()
 
 def optimize_database():
     """Run database optimization commands"""
