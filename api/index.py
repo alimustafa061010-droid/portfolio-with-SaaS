@@ -6,7 +6,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 from datetime import datetime
-from data.db import get_db_connection, initialize_db
+from data.db import get_db_connection, initialize_db, HAS_POSTGRES
 
 app = Flask(__name__)
 load_dotenv()
