@@ -151,42 +151,82 @@ export default function HeroSection({ isLoaded }: { isLoaded: boolean }) {
     Array(ALL_CHARS.length).fill(null)
   );
 
-  // Cursor tracking
+  // Cursor + touch tracking
   const [cursorPos, setCursorPos] = useState({ x: -200, y: -200 });
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => setCursorPos({ x: e.clientX, y: e.clientY });
+    window.addEventListener('mousemove', onMove);
+    return () => window.removeEventListener('mousemove', onMove);
+  }, []);
+
+  useEffect(() => {
+    const onTouch = (e: TouchEvent) => {
+      setIsTouchDevice(true);
+      if (e.touches.length > 0) {
+        setCursorPos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+      }
+    };
+    window.addEventListener('touchstart', onTouch, { passive: true });
+    window.addEventListener('touchmove', onTouch, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', onTouch);
+      window.removeEventListener('touchmove', onTouch);
+    };
+  }, []);
 
   // Drag state
   const [draggingChar, setDraggingChar] = useState<number | null>(null);
   const [liveCoords, setLiveCoords] = useState({ x: 0, y: 0 });
-  const [isLocked, setIsLocked] = useState(false); // disables all drag during reset/message
+  const [isLocked, setIsLocked] = useState(false);
 
-  // GSAP Scroll Effects
   useGSAP(() => {
-    // Scrub Hero Layout on scroll
-    gsap.to('.hero-char-wrapper', {
-      scrollTrigger: {
-        trigger: containerRef.current,
-        start: 'top top',
-        end: 'bottom top',
-        scrub: 1,
+    // Scrub Hero Layout on scroll — use fromTo so the start state is always locked
+    // preventing drift/distortion when scrolling back to top
+    gsap.fromTo('.hero-char-wrapper',
+      // FROM (at scroll start): always perfectly at home
+      {
+        x: 0,
+        y: 0,
+        opacity: 1,
+        rotate: 0,
+        scale: 1,
       },
-      y: (i) => (i % 2 === 0 ? -150 : 150),
-      x: (i) => (i % 3 === 0 ? -100 : 100),
-      opacity: 0,
-      rotate: (i) => (i % 2 === 0 ? -15 : 15),
-      scale: 0.8,
-    });
+      // TO (at scroll end): explode apart
+      {
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 1,
+          invalidateOnRefresh: true,
+        },
+        immediateRender: false,
+        y: (i: number) => (i % 2 === 0 ? -150 : 150),
+        x: (i: number) => (i % 3 === 0 ? -100 : 100),
+        opacity: 0,
+        rotate: (i: number) => (i % 2 === 0 ? -15 : 15),
+        scale: 0.8,
+      }
+    );
 
     // Parallax hero labels
-    gsap.to('.hero-label-parallax', {
-      scrollTrigger: {
-        trigger: containerRef.current,
-        start: 'top top',
-        end: 'bottom top',
-        scrub: true,
-      },
-      y: 200,
-      opacity: 0,
-    });
+    gsap.fromTo('.hero-label-parallax',
+      { y: 0, opacity: 1 },
+      {
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true,
+          invalidateOnRefresh: true,
+        },
+        immediateRender: false,
+        y: 200,
+        opacity: 0,
+      }
+    );
   }, { scope: containerRef });
 
   // Guardian
@@ -290,7 +330,7 @@ export default function HeroSection({ isLoaded }: { isLoaded: boolean }) {
     });
   }, [guardianX, guardianY]);
 
-  // Right-click triggers Guardian
+  // Right-click (desktop) OR long-press (mobile) triggers Guardian
   useEffect(() => {
     const handleDown = (e: PointerEvent) => {
       if (e.button === 2) { e.preventDefault(); triggerGuardianReset(); }
@@ -298,9 +338,22 @@ export default function HeroSection({ isLoaded }: { isLoaded: boolean }) {
     const noCtx = (e: Event) => e.preventDefault();
     window.addEventListener('pointerdown', handleDown);
     window.addEventListener('contextmenu', noCtx);
+
+    // Long-press on mobile
+    let longPressTimer: ReturnType<typeof setTimeout>;
+    const onTouchStart = () => { longPressTimer = setTimeout(() => triggerGuardianReset(), 600); };
+    const onTouchEnd = () => clearTimeout(longPressTimer);
+    const onTouchMove = () => clearTimeout(longPressTimer);
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+
     return () => {
       window.removeEventListener('pointerdown', handleDown);
       window.removeEventListener('contextmenu', noCtx);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('touchmove', onTouchMove);
     };
   }, [triggerGuardianReset]);
 
@@ -315,17 +368,19 @@ export default function HeroSection({ isLoaded }: { isLoaded: boolean }) {
       ref={containerRef}
       className="relative w-full h-screen overflow-hidden bg-transparent pt-24 md:pt-32 px-6 md:px-8 flex flex-col justify-between pb-16 md:pb-24"
     >
-      {/* "You" / "Locked" cursor label */}
-      <div
-        className="pointer-events-none fixed z-[200] flex items-center transition-all duration-300"
-        style={{ left: cursorPos.x + 14, top: cursorPos.y - 8, transform: 'translateY(-50%)' }}
-      >
-        <span
-          className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm whitespace-nowrap select-none transition-colors duration-300 bg-black text-white"
+      {/* "You" cursor label — hidden on touch devices */}
+      {!isTouchDevice && (
+        <div
+          className="pointer-events-none fixed z-[200] flex items-center transition-all duration-300"
+          style={{ left: cursorPos.x + 14, top: cursorPos.y - 8, transform: 'translateY(-50%)' }}
         >
-          You
-        </span>
-      </div>
+          <span
+            className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm whitespace-nowrap select-none transition-colors duration-300 bg-black text-white"
+          >
+            You
+          </span>
+        </div>
+      )}
 
       {/* Live coordinate overlay near cursor */}
       {draggingChar !== null && (
@@ -370,7 +425,10 @@ export default function HeroSection({ isLoaded }: { isLoaded: boolean }) {
         </div>
 
         {message && (
-          <div className="mt-5 ml-4 bg-white/10 backdrop-blur-xl px-4 py-2 rounded-lg border border-white/10 shadow-xl max-w-[320px] text-center">
+          <div
+            className="mt-5 ml-4 bg-white/10 backdrop-blur-xl px-4 py-2 rounded-lg border border-white/10 shadow-xl text-center"
+            style={{ maxWidth: 'min(320px, 85vw)' }}
+          >
             <span className="text-[13px] text-accent font-bold uppercase italic leading-snug font-mono">
               <TypewriterText text={message} speed={80} />
             </span>
