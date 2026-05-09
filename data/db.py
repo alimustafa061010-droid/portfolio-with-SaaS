@@ -86,26 +86,26 @@ def initialize_db():
         ''')
 
         conn.commit()
-        cursor.execute('''
+        cursor.execute(f'''
             CREATE TABLE IF NOT EXISTS customers (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                serial_number TEXT UNIQUE,
-                name TEXT,
-                location TEXT,
-                address TEXT,
-                phone TEXT,
-                reference TEXT,
-                photo_path TEXT,
-                customer_extra_fields TEXT DEFAULT '{}',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                id {id_type},
+                serial_number {text_type} UNIQUE,
+                name {text_type},
+                location {text_type},
+                address {text_type},
+                phone {text_type},
+                reference {text_type},
+                photo_path {text_type},
+                customer_extra_fields {text_type} DEFAULT '{{}}',
+                created_at {timestamp_type},
+                updated_at {timestamp_type}
             )
         ''')
         
         # Add customer_extra_fields column if it doesn't exist (for existing databases)
         try:
-            cursor.execute("ALTER TABLE customers ADD COLUMN customer_extra_fields TEXT DEFAULT '{}'")
-        except sqlite3.OperationalError:
+            cursor.execute(f"ALTER TABLE customers ADD COLUMN customer_extra_fields {text_type} DEFAULT '{{}}'")
+        except Exception:
             pass
         
         # Create index on serial_number for faster lookups
@@ -121,27 +121,27 @@ def initialize_db():
         ''')
         
         # Create materials table
-        cursor.execute('''
+        cursor.execute(f'''
             CREATE TABLE IF NOT EXISTS materials (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT UNIQUE,
-                properties TEXT, -- JSON string
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                id {id_type},
+                name {text_type} UNIQUE,
+                properties {text_type}, -- JSON string
+                created_at {timestamp_type},
                 active INTEGER DEFAULT 1,
-                category TEXT DEFAULT 'inventory'
+                category {text_type} DEFAULT 'inventory'
             )
         ''')
         
         # Add active column if it doesn't exist (for existing databases)
         try:
             cursor.execute("ALTER TABLE materials ADD COLUMN active INTEGER DEFAULT 1")
-        except sqlite3.OperationalError:
+        except Exception:
             pass
         
         # Add category column if it doesn't exist (for existing databases)
         try:
-            cursor.execute("ALTER TABLE materials ADD COLUMN category TEXT DEFAULT 'inventory'")
-        except sqlite3.OperationalError:
+            cursor.execute(f"ALTER TABLE materials ADD COLUMN category {text_type} DEFAULT 'inventory'")
+        except Exception:
             pass
         
         # Create index on material name
@@ -151,16 +151,16 @@ def initialize_db():
         ''')
         
         # Create inventory table with optimized structure
-        cursor.execute('''
+        cursor.execute(f'''
             CREATE TABLE IF NOT EXISTS inventory (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id {id_type},
                 material_id INTEGER,
                 quantity INTEGER DEFAULT 0,
                 price REAL DEFAULT 0.0,
-                image_path TEXT,
-                properties TEXT, -- JSON string
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                image_path {text_type},
+                properties {text_type}, -- JSON string
+                created_at {timestamp_type},
+                updated_at {timestamp_type},
                 FOREIGN KEY(material_id) REFERENCES materials(id) ON DELETE CASCADE
             )
         ''')
@@ -177,27 +177,27 @@ def initialize_db():
         ''')
         
         # Create removed_materials table
-        cursor.execute('''
+        cursor.execute(f'''
             CREATE TABLE IF NOT EXISTS removed_materials (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT,
-                properties TEXT, -- JSON string
-                removed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                removed_by TEXT
+                id {id_type},
+                name {text_type},
+                properties {text_type}, -- JSON string
+                removed_at {timestamp_type},
+                removed_by {text_type}
             )
         ''')
         
         # Create inventory_change_log table with optimized structure
-        cursor.execute('''
+        cursor.execute(f'''
             CREATE TABLE IF NOT EXISTS inventory_change_log (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id {id_type},
                 item_id INTEGER,
-                action TEXT NOT NULL,
+                action {text_type} NOT NULL,
                 quantity_before INTEGER,
                 quantity_after INTEGER,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                user TEXT,
-                note TEXT,
+                timestamp {timestamp_type},
+                "user" {text_type},
+                note {text_type},
                 FOREIGN KEY(item_id) REFERENCES inventory(id) ON DELETE SET NULL
             )
         ''')
@@ -218,46 +218,23 @@ def initialize_db():
             ON inventory_change_log(action)
         ''')
         
-        # Create triggers for updated_at timestamps
-        cursor.execute('''
-            CREATE TRIGGER IF NOT EXISTS update_customers_timestamp 
-            AFTER UPDATE ON customers
-            BEGIN
-                UPDATE customers SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
-            END
-        ''')
-        
-        cursor.execute('''
-            CREATE TRIGGER IF NOT EXISTS update_inventory_timestamp 
-            AFTER UPDATE ON inventory
-            BEGIN
-                UPDATE inventory SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
-            END
-        ''')
-        
-        # Create users table for web authentication
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT UNIQUE,
-                password TEXT,
-                role TEXT DEFAULT 'user',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        # Create enrollment table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS enrollments (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                email TEXT NOT NULL,
-                phone TEXT,
-                course TEXT NOT NULL,
-                message TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
+        # Triggers for updated_at (Only for SQLite, Postgres uses different trigger setup or handled elsewhere)
+        if not os.environ.get('POSTGRES_URL'):
+            cursor.execute('''
+                CREATE TRIGGER IF NOT EXISTS update_customers_timestamp 
+                AFTER UPDATE ON customers
+                BEGIN
+                    UPDATE customers SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+                END
+            ''')
+            
+            cursor.execute('''
+                CREATE TRIGGER IF NOT EXISTS update_inventory_timestamp 
+                AFTER UPDATE ON inventory
+                BEGIN
+                    UPDATE inventory SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+                END
+            ''')
 
         # Insert a default admin user if no users exist
         cursor.execute("SELECT COUNT(*) FROM users")
