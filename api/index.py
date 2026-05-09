@@ -42,6 +42,12 @@ def health():
     return jsonify({
         'status': 'healthy' if "connected" in db_status else 'degraded',
         'database': db_status,
+        'diagnostics': {
+            'has_postgres_url': 'POSTGRES_URL' in os.environ,
+            'has_database_url': 'DATABASE_URL' in os.environ,
+            'has_psycopg2': HAS_POSTGRES,
+            'env_keys': list(os.environ.keys())[:10] # Just see a few
+        },
         'timestamp': datetime.now().isoformat()
     })
 
