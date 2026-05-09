@@ -2,14 +2,14 @@ import { useState, useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { 
-  Brain, 
-  Code2, 
-  Database, 
-  Cloud, 
-  Layout, 
-  Palette, 
-  CheckCircle2, 
+import {
+  Brain,
+  Code2,
+  Database,
+  Cloud,
+  Layout,
+  Palette,
+  CheckCircle2,
   ArrowRight
 } from 'lucide-react';
 import EnrollmentForm from '../ui/EnrollmentForm';
@@ -121,6 +121,8 @@ export default function CoursesSection() {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   useGSAP(() => {
+    console.log("CoursesSection mounted, courses:", courses);
+    /*
     gsap.from('.course-header-reveal', {
       scrollTrigger: {
         trigger: '.course-header-reveal',
@@ -143,6 +145,7 @@ export default function CoursesSection() {
       duration: 0.8,
       ease: 'power3.out',
     });
+    */
   }, { scope: containerRef });
 
   const handleEnroll = (courseTitle: string) => {
@@ -154,27 +157,27 @@ export default function CoursesSection() {
     <section id="courses" className="relative w-full py-32 bg-transparent overflow-hidden px-8" ref={containerRef}>
       <div className="max-w-screen-2xl mx-auto mb-20 flex flex-col items-start px-4">
         <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em] mb-6 block course-header-reveal">
-            05 / ACADEMY
+          05 / ACADEMY
         </span>
         <div className="flex flex-col leading-[0.8] course-header-reveal">
-            <h2 className="text-[15vw] md:text-[10vw] font-black uppercase text-white tracking-tighter">
-               Our Courses
-            </h2>
-            <p className="text-zinc-500 mt-8 max-w-xl text-lg font-medium leading-relaxed tracking-tight" style={{ lineHeight: '1.4' }}>
-              Master the most in-demand skills in the tech industry with our expert-led, practical training programs.
-            </p>
+          <h2 className="text-[15vw] md:text-[10vw] font-black uppercase text-white tracking-tighter">
+            Our Courses
+          </h2>
+          <p className="text-zinc-500 mt-8 max-w-xl text-lg font-medium leading-relaxed tracking-tight" style={{ lineHeight: '1.4' }}>
+            Master the most in-demand skills in the tech industry with our expert-led, practical training programs.
+          </p>
         </div>
       </div>
 
       <div className="course-grid max-w-screen-2xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {courses.map((course) => (
-          <div 
-            key={course.id} 
+          <div
+            key={course.id}
             className={`course-card group relative flex flex-col rounded-3xl overflow-hidden border border-white/5 bg-zinc-950/20 backdrop-blur-2xl transition-all duration-500 hover:border-accent/30 p-8`}
           >
             {/* Background Gradient */}
             <div className={`absolute inset-0 bg-gradient-to-br ${course.color} opacity-0 group-hover:opacity-100 transition-opacity duration-700`} />
-            
+
             <div className="relative z-10 flex flex-col h-full">
               <div className="flex justify-between items-start mb-8">
                 <div className="p-4 bg-white/5 rounded-2xl group-hover:bg-accent/10 transition-colors duration-500">
@@ -188,7 +191,7 @@ export default function CoursesSection() {
               <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-4 pr-10 leading-tight">
                 {course.title}
               </h3>
-              
+
               <p className="text-zinc-400 text-sm mb-8 group-hover:text-zinc-300 transition-colors duration-500 line-clamp-2">
                 {course.description}
               </p>
@@ -205,7 +208,7 @@ export default function CoursesSection() {
                 )}
               </div>
 
-              <button 
+              <button
                 onClick={() => handleEnroll(course.title)}
                 className="group/btn relative w-full bg-accent text-zinc-950 font-black uppercase text-xs tracking-widest py-5 rounded-2xl overflow-hidden transition-transform duration-300 active:scale-[0.98]"
               >
@@ -235,9 +238,9 @@ export default function CoursesSection() {
       </div>
 
       {isFormOpen && (
-        <EnrollmentForm 
-          courseName={selectedCourse || ""} 
-          onClose={() => setIsFormOpen(false)} 
+        <EnrollmentForm
+          courseName={selectedCourse || ""}
+          onClose={() => setIsFormOpen(false)}
         />
       )}
     </section>
