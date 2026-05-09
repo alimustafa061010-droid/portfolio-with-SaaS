@@ -18,6 +18,14 @@ try:
 except Exception as e:
     print(f"Init error: {e}")
 
+@app.route('/api/init-db', methods=['GET'])
+def trigger_init():
+    try:
+        initialize_db()
+        return jsonify({'success': True, 'message': 'Database initialization triggered'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Init failed: {str(e)}'}), 500
+
 @app.route('/api/health', methods=['GET'])
 def health():
     db_status = "unknown"
