@@ -58,7 +58,7 @@ export default function EnrollmentForm({ courseName, onClose }: EnrollmentFormPr
     setStatus('submitting');
     
     try {
-      const response = await fetch('http://localhost:5000/api/enroll', {
+      const response = await fetch('/api/enroll', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

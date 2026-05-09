@@ -1,159 +1,84 @@
-# Database connection and schema for MKT Business Management
-import sqlite3
 import os
 import threading
 import time
 from contextlib import contextmanager
 from typing import Optional, Dict, Any
 
-def get_app_data_path():
-    """Get the application data directory in a writable location"""
-    app_data = os.path.join(os.getenv('APPDATA', os.path.expanduser('~')), 'ModernMKT')
-    if not os.path.exists(app_data):
-        os.makedirs(app_data, exist_ok=True)
-    return os.path.abspath(app_data)
-
-def resolve_path(path: str) -> str:
-    """Resolve a relative path from the app data directory to an absolute path."""
-    if not path:
-        return ""
-    if os.path.isabs(path):
-        if os.path.exists(path):
-            return path
-        # Try to resolve old absolute path to current user's AppData
-        filename = os.path.basename(path)
-        # Search for the same filename in its respective folder structure
-        # (e.g., and the subfolder name)
-        # For simplicity, if it's absolute but doesn't exist, we'll try to guess its relative parts
-        # Most of our paths are ModernMKT/customers/ID/photo.png
-        parts = path.replace('\\', '/').split('/')
-        if 'ModernMKT' in parts:
-            idx = parts.index('ModernMKT')
-            rel = os.path.join(*parts[idx+1:])
-            abs_path = os.path.join(get_app_data_path(), rel)
-            if os.path.exists(abs_path):
-                return abs_path
-        return path # Fallback
-    return os.path.join(get_app_data_path(), path)
-
-def make_relative_path(abs_path: str) -> str:
-    """Convert an absolute path in the app data directory to a relative path."""
-    if not abs_path:
-        return ""
-    app_data = get_app_data_path()
-    if abs_path.startswith(app_data):
-        return os.path.relpath(abs_path, app_data)
-    return abs_path # Return as is if it's not in AppData
-
-# The database should be in a writable location like AppData
-APP_DATA_DIR = get_app_data_path()
-DB_FILENAME = os.path.join(APP_DATA_DIR, 'mkt_business.db')
-
-# Migration logic for existing database
-_old_db_path = os.path.join(os.path.dirname(__file__), '..', 'mkt_business.db')
-if os.path.exists(_old_db_path) and not os.path.exists(DB_FILENAME):
-    try:
-        import shutil
-        shutil.move(_old_db_path, DB_FILENAME)
-        print(f"Migrated database from {_old_db_path} to {DB_FILENAME}")
-    except Exception as e:
-        print(f"Failed to migrate database: {e}")
-        # Fallback to old path if copy fails (though it might still have permission issues)
-        if not os.path.exists(DB_FILENAME):
-            DB_FILENAME = _old_db_path
-
-# Global connection pool
-_connection_pool = None
-_pool_lock = threading.Lock()
-
-class DatabaseManager:
-    """Database manager without connection pooling (thread-safe for SQLite)"""
-    
-    def __init__(self, db_path: str = DB_FILENAME, max_connections: int = 5):
-        self.db_path = db_path
-        # max_connections is ignored now, but kept for compatibility
-        self.lock = threading.Lock()
-    
-    def _create_connection(self) -> sqlite3.Connection:
-        """Create a new database connection with optimizations"""
-        conn = sqlite3.connect(self.db_path, timeout=30.0)
-        conn.row_factory = sqlite3.Row
-        # Enable WAL mode for better concurrency
-        conn.execute("PRAGMA journal_mode=WAL")
-        # Enable foreign keys
-        conn.execute("PRAGMA foreign_keys=ON")
-        # Set cache size for better performance
-        conn.execute("PRAGMA cache_size=10000")
-        # Set temp store to memory for better performance
-        conn.execute("PRAGMA temp_store=MEMORY")
-        # Set synchronous mode for better performance (NORMAL is a good balance)
-        conn.execute("PRAGMA synchronous=NORMAL")
-        return conn
-    
-    @contextmanager
-    def get_connection(self):
-        """Get a new connection for each context (thread-safe)"""
-        conn = None
-        try:
-            conn = self._create_connection()
-            yield conn
-        except Exception as e:
-            if conn:
-                conn.rollback()
-            raise e
-        finally:
-            if conn:
-                conn.close()
-
-# Global database manager instance
-_db_manager = None
-
-def get_db_manager() -> DatabaseManager:
-    """Get the global database manager instance"""
-    global _db_manager
-    if _db_manager is None:
-        with _pool_lock:
-            if _db_manager is None:
-                _db_manager = DatabaseManager()
-    return _db_manager
+# Conditional imports for Postgres/SQLite
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+    HAS_POSTGRES = True
+except ImportError:
+    HAS_POSTGRES = False
+    import sqlite3
 
 def get_db_connection():
-    """Get a database connection (legacy function for compatibility)"""
-    return get_db_manager()._create_connection()
+    """Get a database connection (Postgres for Vercel, SQLite for local)"""
+    postgres_url = os.environ.get('POSTGRES_URL') or os.environ.get('DATABASE_URL')
+    
+    if postgres_url and HAS_POSTGRES:
+        # Connect to Vercel Postgres
+        conn = psycopg2.connect(postgres_url, sslmode='require')
+        return conn
+    else:
+        # Fallback to local SQLite
+        # Define DB_FILENAME if not already
+        db_path = os.path.join(os.path.dirname(__file__), '..', 'mkt_business.db')
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        return conn
 
 @contextmanager
 def get_db_connection_context():
-    """Get a database connection with context manager"""
-    with get_db_manager().get_connection() as conn:
+    """Context manager for database connections"""
+    conn = None
+    try:
+        conn = get_db_connection()
         yield conn
-
-def execute_query(query: str, params: Optional[tuple] = None) -> list:
-    """Execute a query and return results"""
-    with get_db_connection_context() as conn:
-        cursor = conn.cursor()
-        if params:
-            cursor.execute(query, params)
-        else:
-            cursor.execute(query)
-        return cursor.fetchall()
-
-def execute_update(query: str, params: Optional[tuple] = None) -> int:
-    """Execute an update query and return affected rows"""
-    with get_db_connection_context() as conn:
-        cursor = conn.cursor()
-        if params:
-            cursor.execute(query, params)
-        else:
-            cursor.execute(query)
-        conn.commit()
-        return cursor.rowcount
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise e
+    finally:
+        if conn:
+            conn.close()
 
 def initialize_db():
-    """Initialize database with optimized schema"""
+    """Initialize database tables for Postgres/SQLite"""
     with get_db_connection_context() as conn:
         cursor = conn.cursor()
         
-        # Create customers table with optimized indexes
+        # Use SERIAL for Postgres, AUTOINCREMENT for SQLite
+        id_type = "SERIAL PRIMARY KEY" if os.environ.get('POSTGRES_URL') else "INTEGER PRIMARY KEY AUTOINCREMENT"
+        text_type = "TEXT"
+        timestamp_type = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+
+        # Enrollment table
+        cursor.execute(f'''
+            CREATE TABLE IF NOT EXISTS enrollments (
+                id {id_type},
+                name {text_type} NOT NULL,
+                email {text_type} NOT NULL,
+                phone {text_type},
+                course {text_type} NOT NULL,
+                message {text_type},
+                created_at {timestamp_type}
+            )
+        ''')
+        
+        # Users table
+        cursor.execute(f'''
+            CREATE TABLE IF NOT EXISTS users (
+                id {id_type},
+                email {text_type} UNIQUE,
+                password {text_type},
+                role {text_type} DEFAULT 'user',
+                created_at {timestamp_type}
+            )
+        ''')
+
+        conn.commit()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS customers (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
