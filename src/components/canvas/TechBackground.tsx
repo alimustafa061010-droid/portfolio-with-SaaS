@@ -46,14 +46,16 @@ export default function TechBackground() {
         color="#818cf8" 
       />
 
-      {/* Main Abstract Technological Core */}
+      {/* Main Abstract Technological Core — More Visible */}
       <Float speed={1.5} rotationIntensity={0.5} floatIntensity={1} position={[0, 0, -5]}>
-        <Icosahedron ref={coreRef} args={[3, 2]}> {/* Detail level 2 creates a complex spherical wireframe */}
-          <meshBasicMaterial 
-            color="#4f46e5" 
+        <Icosahedron ref={coreRef} args={[3.5, 2]}> {/* Increased size for better presence */}
+          <meshStandardMaterial 
+            color="#6366f1" /* Slightly brighter indigo */
+            emissive="#4f46e5"
+            emissiveIntensity={0.5} /* Subtle glow */
             wireframe 
             transparent 
-            opacity={0.08} 
+            opacity={0.15} /* Increased from 0.08 */
           />
         </Icosahedron>
       </Float>

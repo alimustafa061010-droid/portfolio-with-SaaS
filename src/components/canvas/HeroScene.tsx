@@ -34,12 +34,12 @@ export default function HeroScene() {
           {/* Outer Halo (Smoked Glass) */}
           <Sphere args={[2.2, 32, 32]}>
             <meshPhysicalMaterial 
-              color="#09090b" 
+              color="#1a1a1f" /* Brighter than #09090b */
               transmission={1} 
               opacity={1} 
-              roughness={0.15} 
-              ior={1.5} 
-              thickness={1.5} 
+              roughness={0.05} /* Sweeter reflections */
+              ior={1.8} 
+              thickness={2.5} 
               transparent 
             />
           </Sphere>
@@ -60,7 +60,7 @@ export default function HeroScene() {
         </Float>
       </group>
 
-      <Environment preset="city" />
+      <Environment preset="city" environmentIntensity={1.5} />
     </>
   );
 }
