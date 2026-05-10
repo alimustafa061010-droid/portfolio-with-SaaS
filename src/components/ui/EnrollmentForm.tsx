@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { X, Send, CheckCircle2, Loader2 } from 'lucide-react';
 
 interface EnrollmentFormProps {
@@ -30,10 +31,18 @@ export default function EnrollmentForm({ courseName, onClose }: EnrollmentFormPr
       { y: 0, scale: 1, opacity: 1, duration: 0.6, ease: 'power3.out', delay: 0.1 }
     );
     
-    // Lock scroll
+    // Lock scroll and disable normalization
     document.body.style.overflow = 'hidden';
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
+    if (isTouchDevice) {
+      ScrollTrigger.normalizeScroll(false);
+    }
+
     return () => {
       document.body.style.overflow = 'unset';
+      if (isTouchDevice) {
+        ScrollTrigger.normalizeScroll(true);
+      }
     };
   }, []);
 
@@ -91,11 +100,12 @@ export default function EnrollmentForm({ courseName, onClose }: EnrollmentFormPr
   return (
     <div 
       ref={modalRef}
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-2xl p-4 overflow-y-auto"
+      className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-2xl p-4 overflow-y-auto flex items-start justify-center"
+      data-lenis-prevent
     >
       <div 
         ref={contentRef}
-        className="relative w-full max-w-xl bg-zinc-950 border border-white/10 rounded-[28px] md:rounded-[40px] shadow-2xl overflow-y-auto my-auto"
+        className="relative w-full max-w-xl bg-zinc-950 border border-white/10 rounded-[28px] md:rounded-[40px] shadow-2xl my-auto"
       >
         <button 
           onClick={handleClose}
