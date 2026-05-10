@@ -1,17 +1,52 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { X, Menu } from 'lucide-react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [time, setTime] = useState(new Date());
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const linksRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Use useGSAP for menu animations
+  useGSAP(() => {
+    if (menuOpen) {
+      // Menu background entry
+      gsap.fromTo(menuRef.current,
+        { x: '100%' },
+        { x: '0%', duration: 0.8, ease: 'power4.out' }
+      );
+      
+      // Header and Footer areas
+      gsap.from('.menu-reveal', {
+        y: 20,
+        opacity: 0,
+        duration: 0.6,
+        stagger: 0.1,
+        ease: 'power3.out',
+        delay: 0.4
+      });
+
+      // Links stagger
+      gsap.from('.menu-link', {
+        x: 50,
+        opacity: 0,
+        duration: 0.8,
+        stagger: 0.08,
+        ease: 'power4.out',
+        delay: 0.3
+      });
+    }
+  }, { dependencies: [menuOpen] });
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -104,43 +139,60 @@ export default function Navbar() {
 
       {/* Mobile Full-Screen Menu */}
       {menuOpen && (
-        <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex flex-col px-8 pt-8 pb-16">
+        <div 
+          ref={menuRef}
+          className="fixed inset-0 z-[10000] bg-black/95 backdrop-blur-3xl flex flex-col px-8 pt-8 pb-16 overflow-hidden"
+        >
           {/* Close button */}
-          <div className="flex items-center justify-between mb-16">
+          <div className="flex items-center justify-between mb-20 menu-reveal">
             <span className="text-white text-sm font-bold uppercase tracking-[0.2em]">Navaish Khan</span>
             <button
-              onClick={() => setMenuOpen(false)}
-              className="text-white p-2 border border-white/10 rounded-sm hover:border-accent transition-all"
+              onClick={() => {
+                gsap.to(menuRef.current, {
+                  x: '100%',
+                  duration: 0.6,
+                  ease: 'power4.in',
+                  onComplete: () => setMenuOpen(false)
+                });
+              }}
+              className="text-white p-3 border border-white/10 rounded-full hover:border-accent transition-all bg-white/5 active:scale-95"
               aria-label="Close menu"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6" />
             </button>
           </div>
 
           {/* Nav links */}
-          <nav className="flex flex-col gap-2 flex-1">
+          <nav className="flex flex-col gap-4 flex-1" ref={linksRef}>
             {navLinks.map((link, i) => (
               <button
                 key={link.id}
                 onClick={() => handleScrollTo(link.id)}
-                className="text-left text-[13vw] font-black uppercase tracking-tighter text-white hover:text-accent transition-colors leading-none py-2"
-                style={{ animationDelay: `${i * 60}ms` }}
+                className="menu-link group flex items-baseline gap-4 text-left text-[14vw] font-black uppercase tracking-tighter text-white hover:text-accent transition-colors leading-[0.9] py-1"
               >
+                <span className="text-[10px] font-mono text-zinc-600 group-hover:text-accent transition-colors">0{i+1}</span>
                 {link.label}
               </button>
             ))}
           </nav>
 
           {/* Bottom area */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-10 menu-reveal">
             <button
               onClick={() => { navigate('/auth'); setMenuOpen(false); }}
-              className="w-full py-5 bg-accent text-black font-black uppercase tracking-widest text-sm rounded-sm"
+              className="group w-full py-6 bg-accent text-black font-black uppercase tracking-widest text-xs rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-transform"
             >
-              Portal →
+              Portal <span className="group-hover:translate-x-1 transition-transform">→</span>
             </button>
-            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em]">
-              Pakistan · {formatTime(time)}
+            <div className="flex justify-between items-center text-[10px] font-mono text-zinc-500 uppercase tracking-[0.3em]">
+               <div className="flex flex-col gap-1 text-left">
+                  <span className="text-zinc-600">Location</span>
+                  <span className="text-zinc-300 font-bold">Pakistan</span>
+               </div>
+               <div className="flex flex-col items-end gap-1 text-right">
+                  <span className="text-zinc-600">Local Time</span>
+                  <span className="text-zinc-300 font-bold">{formatTime(time)}</span>
+               </div>
             </div>
           </div>
         </div>
