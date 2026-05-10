@@ -91,11 +91,11 @@ export default function EnrollmentForm({ courseName, onClose }: EnrollmentFormPr
   return (
     <div 
       ref={modalRef}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-2xl p-4 overflow-y-auto"
     >
       <div 
         ref={contentRef}
-        className="relative w-full max-w-xl bg-zinc-950 border border-white/10 rounded-[28px] md:rounded-[40px] shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar"
+        className="relative w-full max-w-xl bg-zinc-950 border border-white/10 rounded-[28px] md:rounded-[40px] shadow-2xl overflow-y-auto my-auto"
       >
         <button 
           onClick={handleClose}
@@ -117,9 +117,9 @@ export default function EnrollmentForm({ courseName, onClose }: EnrollmentFormPr
             </div>
           ) : (
             <>
-              <div className="mb-10 pr-12">
+              <div className="mb-10 pr-12 pt-4">
                 <span className="text-[10px] font-mono text-accent uppercase tracking-[0.3em] mb-4 block">Enrollment Form</span>
-                <h3 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tighter leading-tight mb-2">
+                <h3 className="text-xl md:text-3xl font-black text-white uppercase tracking-tighter leading-tight mb-2">
                   Join {courseName}
                 </h3>
                 <p className="text-zinc-500 text-sm font-medium">Take the first step towards your new career path.</p>
