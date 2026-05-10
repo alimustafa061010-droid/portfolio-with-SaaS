@@ -95,31 +95,31 @@ export default function EnrollmentForm({ courseName, onClose }: EnrollmentFormPr
     >
       <div 
         ref={contentRef}
-        className="relative w-full max-w-xl bg-zinc-950 border border-white/10 rounded-[40px] shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar"
+        className="relative w-full max-w-xl bg-zinc-950 border border-white/10 rounded-[28px] md:rounded-[40px] shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar"
       >
         <button 
           onClick={handleClose}
-          className="sticky top-8 float-right mr-8 p-3 rounded-full bg-zinc-900 border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-300 z-50"
+          className="absolute top-6 right-6 p-3 rounded-full bg-zinc-900 border border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 transition-all duration-300 z-50"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="p-10 md:p-14 pt-0">
+        <div className="p-6 md:p-14">
           {status === 'success' ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
-              <div className="w-20 h-20 bg-accent/20 rounded-full flex items-center justify-center mb-8">
-                <CheckCircle2 className="w-10 h-10 text-accent" />
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-accent/20 rounded-full flex items-center justify-center mb-8">
+                <CheckCircle2 className="w-8 h-8 md:w-10 md:h-10 text-accent" />
               </div>
-              <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">Application Received</h3>
+              <h3 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter mb-4">Application Received</h3>
               <p className="text-zinc-400 max-w-xs mx-auto leading-relaxed">
                 Thank you for choosing {courseName}. Our academic advisor will contact you shortly.
               </p>
             </div>
           ) : (
             <>
-              <div className="mb-10">
+              <div className="mb-10 pr-12">
                 <span className="text-[10px] font-mono text-accent uppercase tracking-[0.3em] mb-4 block">Enrollment Form</span>
-                <h3 className="text-4xl font-black text-white uppercase tracking-tighter leading-tight mb-2">
+                <h3 className="text-2xl md:text-4xl font-black text-white uppercase tracking-tighter leading-tight mb-2">
                   Join {courseName}
                 </h3>
                 <p className="text-zinc-500 text-sm font-medium">Take the first step towards your new career path.</p>
@@ -135,7 +135,7 @@ export default function EnrollmentForm({ courseName, onClose }: EnrollmentFormPr
                       placeholder="Enter your name"
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-zinc-700 focus:outline-none focus:border-accent/40 transition-colors"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 md:px-6 py-3.5 md:py-4 text-sm md:text-base text-white placeholder:text-zinc-700 focus:outline-none focus:border-accent/40 transition-colors"
                     />
                   </div>
                   <div className="space-y-2">
@@ -146,7 +146,7 @@ export default function EnrollmentForm({ courseName, onClose }: EnrollmentFormPr
                       placeholder="name@example.com"
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-zinc-700 focus:outline-none focus:border-accent/40 transition-colors"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 md:px-6 py-3.5 md:py-4 text-sm md:text-base text-white placeholder:text-zinc-700 focus:outline-none focus:border-accent/40 transition-colors"
                     />
                   </div>
                 </div>
@@ -158,7 +158,7 @@ export default function EnrollmentForm({ courseName, onClose }: EnrollmentFormPr
                     placeholder="+92 XXX XXXXXXX"
                     value={formData.phone}
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-zinc-700 focus:outline-none focus:border-accent/40 transition-colors"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 md:px-6 py-3.5 md:py-4 text-sm md:text-base text-white placeholder:text-zinc-700 focus:outline-none focus:border-accent/40 transition-colors"
                   />
                 </div>
 
@@ -169,7 +169,7 @@ export default function EnrollmentForm({ courseName, onClose }: EnrollmentFormPr
                     placeholder="Tell us about your background or goals..."
                     value={formData.message}
                     onChange={(e) => setFormData({...formData, message: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-zinc-700 focus:outline-none focus:border-accent/40 transition-colors resize-none"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 md:px-6 py-3.5 md:py-4 text-sm md:text-base text-white placeholder:text-zinc-700 focus:outline-none focus:border-accent/40 transition-colors resize-none"
                   />
                 </div>
 
