@@ -25,8 +25,7 @@ export default function Navbar() {
       hour: '2-digit', 
       minute: '2-digit',
       second: '2-digit',
-      timeZone: 'America/New_York'
-    }) + ' EST';
+    }) + ' PKT';
   };
 
   const handleScrollTo = (id: string) => {
@@ -65,7 +64,7 @@ export default function Navbar() {
 
           {/* Center: Real-time Location/Time (desktop only) */}
           <div className="hidden lg:flex items-center gap-4 text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-400">
-            <span>Charlotte, NC</span>
+            <span>Pakistan</span>
             <span className="w-1 h-1 bg-zinc-600 rounded-full" />
             <span className="text-zinc-200">{formatTime(time)}</span>
           </div>
@@ -141,7 +140,7 @@ export default function Navbar() {
               Portal →
             </button>
             <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em]">
-              Charlotte, NC · {formatTime(time)}
+              Pakistan · {formatTime(time)}
             </div>
           </div>
         </div>
