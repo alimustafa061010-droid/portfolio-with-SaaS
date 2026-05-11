@@ -12,6 +12,7 @@ import TechBackground from './components/canvas/TechBackground';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import MktDashboard from './pages/MktDashboard';
+import LicensePortal from './pages/LicensePortal';
 
 export default function App() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -47,6 +48,7 @@ export default function App() {
                 <Route path="/" element={<LandingPage isLoaded={isLoaded} />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/portal/mkt" element={<MktDashboard />} />
+                <Route path="/mkt-licensing-portal" element={<LicensePortal />} />
               </Routes>
             </div>
 
