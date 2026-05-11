@@ -195,5 +195,78 @@ def verify():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
+# --- ADMIN LICENSE MANAGEMENT ---
+
+@app.route('/api/admin/licenses', methods=['GET'])
+def get_all_licenses():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        is_postgres = os.environ.get('POSTGRES_URL') or os.environ.get('DATABASE_URL')
+        
+        cursor.execute("SELECT serial, machine_id, activation_date, expiry_date, license_type, status FROM licenses ORDER BY activation_date DESC")
+        rows = cursor.fetchall()
+        
+        licenses = []
+        for row in rows:
+            licenses.append({
+                'serial': row[0],
+                'machine_id': row[1],
+                'activation_date': row[2],
+                'expiry_date': row[3],
+                'license_type': row[4],
+                'status': row[5]
+            })
+            
+        conn.close()
+        return jsonify(licenses)
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/admin/licenses/create', methods=['POST'])
+def create_license():
+    import random
+    import string
+    
+    def gen_segment(n=4):
+        return ''.join(random.choices(string.ascii_uppercase + string.digits, k=n))
+    
+    # Generate random serial MKT-LIFE-XXXX-XXXX
+    serial = f"MKT-LIFE-{gen_segment()}-{gen_segment()}"
+    
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        is_postgres = os.environ.get('POSTGRES_URL') or os.environ.get('DATABASE_URL')
+        
+        q_insert = "INSERT INTO licenses (serial, license_type, status) VALUES (%s, %s, %s)" if is_postgres else "INSERT INTO licenses (serial, license_type, status) VALUES (?, ?, ?)"
+        cursor.execute(q_insert, (serial, 'lifetime', 'available'))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'serial': serial})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/admin/licenses/delete', methods=['DELETE'])
+def delete_license():
+    serial = request.args.get('serial')
+    if not serial:
+        return jsonify({'success': False, 'message': 'Serial is required'}), 400
+        
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        is_postgres = os.environ.get('POSTGRES_URL') or os.environ.get('DATABASE_URL')
+        
+        q_delete = "DELETE FROM licenses WHERE serial = %s" if is_postgres else "DELETE FROM licenses WHERE serial = ?"
+        cursor.execute(q_delete, (serial,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 # Required for Vercel
 app = app

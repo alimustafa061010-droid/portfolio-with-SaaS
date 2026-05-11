@@ -4,9 +4,10 @@ import InventoryManager from '../components/dashboard/InventoryManager';
 import RepairManager from '../components/dashboard/RepairManager';
 import CustomerCRM from '../components/dashboard/CustomerCRM';
 import InvoiceManager from '../components/dashboard/InvoiceManager';
+import LicenseManager from '../components/dashboard/LicenseManager';
 
 export default function MktDashboard() {
-  const [activeTab, setActiveTab] = useState<'inventory' | 'customers' | 'repairs' | 'invoices' | 'settings'>('inventory');
+  const [activeTab, setActiveTab] = useState<'inventory' | 'customers' | 'repairs' | 'invoices' | 'settings' | 'licensing'>('inventory');
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
@@ -133,16 +134,30 @@ export default function MktDashboard() {
             </div>
             {activeTab === 'invoices' && <div className="w-1.5 h-1.5 rounded-full bg-accent" />}
           </button>
-          <button 
-            onClick={() => setActiveTab('settings')}
-            className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-500 group ${activeTab === 'settings' ? 'bg-white/10 text-accent shadow-inner' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
-          >
-            <div className="flex items-center gap-4">
-               <Settings size={20} className={activeTab === 'settings' ? 'animate-spin-slow' : ''} />
-               <span className="text-xs font-black uppercase tracking-[0.2em]">Settings</span>
-            </div>
-            {activeTab === 'settings' && <div className="w-1.5 h-1.5 rounded-full bg-accent" />}
-          </button>
+          
+          <div className="pt-6 mt-6 border-t border-white/5 space-y-3">
+             <span className="px-5 text-[10px] font-black text-zinc-600 uppercase tracking-[.3em]">Administrator</span>
+             <button 
+               onClick={() => setActiveTab('licensing')}
+               className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-500 group ${activeTab === 'licensing' ? 'bg-accent/10 text-accent shadow-inner' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
+             >
+               <div className="flex items-center gap-4">
+                  <ShieldAlert size={20} className={activeTab === 'licensing' ? 'animate-pulse' : ''} />
+                  <span className="text-xs font-black uppercase tracking-[0.2em]">Licensing</span>
+               </div>
+               {activeTab === 'licensing' && <div className="w-1.5 h-1.5 rounded-full bg-accent" />}
+             </button>
+             <button 
+               onClick={() => setActiveTab('settings')}
+               className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-500 group ${activeTab === 'settings' ? 'bg-white/10 text-accent shadow-inner' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
+             >
+               <div className="flex items-center gap-4">
+                  <Settings size={20} className={activeTab === 'settings' ? 'animate-spin-slow' : ''} />
+                  <span className="text-xs font-black uppercase tracking-[0.2em]">Settings</span>
+               </div>
+               {activeTab === 'settings' && <div className="w-1.5 h-1.5 rounded-full bg-accent" />}
+             </button>
+          </div>
         </nav>
 
         <div className="pt-8 border-t border-white/5 space-y-4">
@@ -219,6 +234,7 @@ export default function MktDashboard() {
               {activeTab === 'repairs' && <RepairManager selectedItems={selectedItems} setSelectedItems={setSelectedItems} />}
               {activeTab === 'customers' && <CustomerCRM />}
               {activeTab === 'invoices' && <InvoiceManager />}
+              {activeTab === 'licensing' && <LicenseManager />}
               {activeTab === 'settings' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-in slide-in-from-bottom-8 duration-700">
                    <div className="p-10 rounded-[3rem] bg-zinc-900/30 border border-white/5 backdrop-blur-3xl space-y-8">
