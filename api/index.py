@@ -121,16 +121,61 @@ def health():
         'timestamp': datetime.now().isoformat()
     })
 
-@app.route('/api/enroll', methods=['POST'])
-def enroll():
+@app.route('/api/activate', methods=['POST'])
+def activate():
     data = request.get_json()
-    name = data.get('name')
-    email = data.get('email')
-    course = data.get('course')
-    phone = data.get('phone')
-    message = data.get('message')
+    serial = data.get('serial')
+    machine_id = data.get('machine_id')
     
-    if not all([name, email, course]):
+    if not serial or not machine_id:
+        return jsonify({'success': False, 'message': 'Missing serial or machine_id'}), 400
+        
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        is_postgres = os.environ.get('POSTGRES_URL') or os.environ.get('DATABASE_URL')
+        
+        # Check if license exists and its status
+        q_select = "SELECT machine_id, status, license_type, expiry_date FROM licenses WHERE serial = %s" if is_postgres else "SELECT machine_id, status, license_type, expiry_date FROM licenses WHERE serial = ?"
+        cursor.execute(q_select, (serial,))
+        row = cursor.fetchone()
+        
+        if not row:
+            return jsonify({'success': False, 'message': 'Invalid serial number'}), 404
+            
+        db_machine_id = row[0]
+        db_status = row[1]
+        license_type = row[2]
+        expiry_date = row[3]
+        
+        # If already activated on another machine
+        if db_machine_id and db_machine_id != machine_id:
+            return jsonify({'success': False, 'message': 'License already activated on another device'}), 403
+            
+        # Activate if not already
+        now_str = datetime.now().isoformat()
+        if not db_machine_id:
+            q_update = "UPDATE licenses SET machine_id = %s, activation_date = %s, status = 'active' WHERE serial = %s" if is_postgres else "UPDATE licenses SET machine_id = ?, activation_date = ?, status = 'active' WHERE serial = ?"
+            cursor.execute(q_update, (machine_id, now_str, serial))
+            conn.commit()
+            
+        conn.close()
+        return jsonify({
+            'success': True, 
+            'message': 'Activation successful',
+            'license_type': license_type,
+            'expiry_date': expiry_date
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/verify', methods=['POST'])
+def verify():
+    data = request.get_json()
+    serial = data.get('serial')
+    machine_id = data.get('machine_id')
+    
+    if not serial or not machine_id:
         return jsonify({'success': False, 'message': 'Missing data'}), 400
         
     try:
@@ -138,28 +183,15 @@ def enroll():
         cursor = conn.cursor()
         is_postgres = os.environ.get('POSTGRES_URL') or os.environ.get('DATABASE_URL')
         
-        query = "INSERT INTO enrollments (name, email, phone, course, message) VALUES (%s, %s, %s, %s, %s) RETURNING id" if is_postgres else "INSERT INTO enrollments (name, email, phone, course, message) VALUES (?, ?, ?, ?, ?)"
-        params = (name, email, phone, course, message)
+        q_verify = "SELECT 1 FROM licenses WHERE serial = %s AND machine_id = %s AND status = 'active'" if is_postgres else "SELECT 1 FROM licenses WHERE serial = ? AND machine_id = ? AND status = 'active'"
+        cursor.execute(q_verify, (serial, machine_id))
         
-        cursor.execute(query, params)
-        if is_postgres:
-            enroll_id = cursor.fetchone()[0]
+        if cursor.fetchone():
+            conn.close()
+            return jsonify({'success': True, 'message': 'Verification successful'})
         else:
-            enroll_id = cursor.lastrowid
-            
-        conn.commit()
-        conn.close()
-
-        # Trigger email notification
-        send_enrollment_email({
-            'name': name,
-            'email': email,
-            'phone': phone,
-            'course': course,
-            'message': message
-        })
-
-        return jsonify({'success': True, 'id': enroll_id})
+            conn.close()
+            return jsonify({'success': False, 'message': 'Invalid or revoked license'}), 403
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 

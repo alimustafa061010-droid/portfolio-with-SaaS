@@ -135,6 +135,15 @@ def initialize_db():
                 timestamp {timestamp_type},
                 "user" {text_type},
                 note {text_type}
+            )''',
+            # Licenses table for online activation
+            f'''CREATE TABLE IF NOT EXISTS licenses (
+                serial {text_type} PRIMARY KEY,
+                machine_id {text_type},
+                activation_date {text_type},
+                expiry_date {text_type},
+                license_type {text_type} DEFAULT 'lifetime',
+                status {text_type} DEFAULT 'available'
             )'''
         ]
 
@@ -172,6 +181,16 @@ def initialize_db():
                 conn.commit()
         except Exception:
             conn.rollback()
+
+        # Seed initial lifetime serial if not exists
+        try:
+            cursor.execute("SELECT COUNT(*) FROM licenses WHERE serial = 'MKT-LIFE-7X2Q-9Z8W'")
+            if cursor.fetchone()[0] == 0:
+                cursor.execute("INSERT INTO licenses (serial, license_type, status) VALUES ('MKT-LIFE-7X2Q-9Z8W', 'lifetime', 'available')")
+                conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(f"Seed error: {e}")
 
     except Exception as e:
         if conn:
